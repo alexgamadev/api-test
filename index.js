@@ -8,7 +8,7 @@ function getRandomImage() {
   return images[rand].images.original.url;
 }
 
-function loadImage(url) {
+async function loadImage(url) {
   loaded = false;
   image.src = "Rolling-1s-200px.gif";
   return new Promise(function(resolve, reject) {
@@ -44,6 +44,16 @@ function hideGifView() {
   }
 }
 
+async function loadData(data) {
+  if(data.length <= 0) {
+    return Promise.reject("No results found");
+  } else {
+    onGifsFound(data);
+    button.addEventListener('click', () => { loadImage(getRandomImage()) });
+    return Promise.success();
+  }
+}
+
 function showSearchResult(message) {
   if(searchResponse.classList.contains('hidden')) {
     searchResponse.innerText = message;
@@ -57,21 +67,11 @@ function hideSearchResult() {
   }
 }
 
-function searchGif(searchTerm) {
-  fetch(`https://api.giphy.com/v1/gifs/search?api_key=VA4SRDcUUN8rczfH6EzYL1TRXEIVZzAR&q=${searchTerm}`, {mode: 'cors'})
-  .then(function(response){
-    return response.json();
-  })
-  .then(function(response) {
-    const data = response.data;
-    if(data.length <= 0) {
-      return Promise.reject("No results found");
-    } else {
-      onGifsFound(data);
-      button.addEventListener('click', () => { loadImage(getRandomImage()) });
-    }
-  })
-  .catch(function(error) {
+async function searchGif(searchTerm) {
+  const apiResponse = await fetch(`https://api.giphy.com/v1/gifs/search?api_key=VA4SRDcUUN8rczfH6EzYL1TRXEIVZzAR&q=${searchTerm}`, {mode: 'cors'});
+  const response = await apiResponse.json();
+  console.log(response);
+  await loadData(response.data).catch(function(error) {
     showSearchResult(error);
     hideGifView();
   })
